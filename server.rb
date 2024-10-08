@@ -1,8 +1,10 @@
 require 'sinatra'
-require 'sinatra/base'
 require 'sqlite3'
 require 'json'
-require 'debug' # Make sure this line is in the right place
+require 'debug'
+require 'dotenv/load'
+require 'httparty'
+
 # use binding.break for debug
 
 class Server < Sinatra::Base
@@ -11,6 +13,7 @@ class Server < Sinatra::Base
         super
         @db = SQLite3::Database.new('db/teacher.db')
         @db.results_as_hash = true
+        Dotenv.load('GitHub-authtoken.env')
     end
 
     before do
@@ -21,13 +24,37 @@ class Server < Sinatra::Base
     set :protection, false
 
     get '/' do
+        "The GitHub Auth Token is: #{ENV['GITHUB_AUTH_TOKEN']}"
+        
         erb :index
     end
 
-    # get department label by id
-    get '/api/fork/:id' do
-        # content_type :json
-        # @db.execute('SELECT * FROM departments WHERE id = ?', params['id']).first.to_json
+    # Endpoint to get forks of a specific GitHub repository
+    get '/api/forks/:owner/:repo' do
+        owner = params['owner']  # Local variable for owner
+        repo = params['repo']    # Local variable for repo
+
+        # Construct the API request URL
+        url = "https://api.github.com/repos/#{owner}/#{repo}/forks"
+    
+        # Perform the API request
+        response = HTTParty.get(
+            url,
+            headers: {
+                "Accept" => "application/vnd.github+json",
+                "Authorization" => "Bearer #{ENV['GITHUB_AUTH_TOKEN']}",  # Use environment variable for the token
+                "X-GitHub-Api-Version" => "2022-11-28"
+            }
+        )
+    
+        # Check for a successful response
+        if response.success?
+            forks = response.parsed_response  # Parse the JSON response
+            forks.to_json  # Return the response as JSON
+        else
+            status response.code  # Set the response status to the response code from GitHub
+            { error: response.parsed_response['message'] }.to_json  # Return an error message as JSON
+        end
     end
 
     #update
