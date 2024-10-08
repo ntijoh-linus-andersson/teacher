@@ -1,4 +1,8 @@
-require 'debug'
+require 'sinatra'
+require 'sinatra/base'
+require 'sqlite3'
+require 'json'
+require 'debug' # Make sure this line is in the right place
 # use binding.break for debug
 
 class Server < Sinatra::Base
@@ -10,7 +14,6 @@ class Server < Sinatra::Base
     end
 
     before do
-        content_type :json
         headers 'Access-Control-Allow-Origin' => '*',
                 'Access-Control-Allow-Methods' => ['GET', 'POST']
     end
@@ -22,7 +25,7 @@ class Server < Sinatra::Base
     end
 
     # get department label by id
-    get 'api/fork/:id' do
+    get '/api/fork/:id' do
         # content_type :json
         # @db.execute('SELECT * FROM departments WHERE id = ?', params['id']).first.to_json
     end
