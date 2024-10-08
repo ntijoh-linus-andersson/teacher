@@ -1,0 +1,17 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Dependency directories
+node_modules/
+
+# Ignore specific environment file
+github-authtoken.env
+
+# Build output
+dist/
+
+# IDE-specific files
+.vscode/
+.idea/
