@@ -1,4 +1,6 @@
+require 'sinatra'
 require 'debug'
+require 'dotenv/load'
 # use binding.break for debug
 
 class Server < Sinatra::Base
@@ -7,6 +9,7 @@ class Server < Sinatra::Base
         super
         @db = SQLite3::Database.new('db/teacher.db')
         @db.results_as_hash = true
+        Dotenv.load('GitHub-authtoken.env')
     end
 
     before do
@@ -18,7 +21,8 @@ class Server < Sinatra::Base
     set :protection, false
 
     get '/' do
-        erb :index
+        "The GitHub Auth Token is: #{ENV['GITHUB_AUTH_TOKEN']}"
+        # erb :index
     end
 
     # get department label by id
