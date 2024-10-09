@@ -15,7 +15,6 @@ class Server < Sinatra::Base
     end
 
     before do
-        content_type :json
         headers 'Access-Control-Allow-Origin' => '*',
                 'Access-Control-Allow-Methods' => ['GET', 'POST']
     end
@@ -23,9 +22,8 @@ class Server < Sinatra::Base
     set :protection, false
 
     get '/' do
-        "The GitHub Auth Token is: #{ENV['GITHUB_AUTH_TOKEN']}"
-        
-        # erb :index
+        #"The GitHub Auth Token is: #{ENV['GITHUB_AUTH_TOKEN']}"
+        erb :index
     end
 
     # Endpoint to get forks of a specific GitHub repository
