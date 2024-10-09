@@ -56,6 +56,24 @@ class Server < Sinatra::Base
     end
     
     
+    get '/api/manifest' do 
+        content_type :json # Specify the content type to be JSON
+
+        begin
+            # Read the JSON file
+            file = File.read('.manifest.json')
+            
+            # Parse the JSON content
+            manifest_data = JSON.parse(file)
+
+            # Return the JSON response
+            manifest_data.to_json
+        rescue StandardError => e
+            # Handle any errors (e.g., file not found, invalid JSON, etc.)
+            status 500
+            { error: 'Could not read manifest file', message: e.message }.to_json
+        end
+    end
 
     # Endpoint to get forks of a specific GitHub repository
     get '/api/forks/:owner/:repo' do
@@ -64,6 +82,36 @@ class Server < Sinatra::Base
 
         # Construct the API request URL
         url = "https://api.github.com/repos/#{owner}/#{repo}/forks"
+    
+        # Perform the API request
+        response = HTTParty.get(
+            url,
+            headers: {
+                "Accept" => "application/vnd.github+json",
+                "Authorization" => "Bearer #{ENV['GITHUB_AUTH_TOKEN']}",  # Use environment variable for the token
+                "X-GitHub-Api-Version" => "2022-11-28"
+            }
+        )
+    
+        # Check for a successful response
+        if response.success?
+            forks = response.parsed_response  # Parse the JSON response
+            forks.to_json  # Return the response as JSON
+        else
+            status response.code  # Set the response status to the response code from GitHub
+            { error: response.parsed_response['message'] }.to_json  # Return an error message as JSON
+        end
+    end
+
+    # Endpoint to get forks of a specific GitHub repository
+    get '/api/forks/:owner/:repo/contents/:filepath' do
+        puts("yooo")
+        owner = params['owner']  # Local variable for owner
+        repo = params['repo']    # Local variable for repo
+        filePath = params['filepath']    # Local variable for repo
+
+        # Construct the API request URL
+        url = "https://api.github.com/repos/#{owner}/#{repo}/contents/#{filePath}"
     
         # Perform the API request
         response = HTTParty.get(

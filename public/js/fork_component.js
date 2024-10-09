@@ -28,7 +28,7 @@ export class ForkCard extends MUI {
             return null;
         }
     
-        const response = await fetch(`https://api.github.com/repos/${data.owner.login}/${data.name}/contents/${this.filePath}`);
+        const response = await fetch(`/api/forks/${data.owner.login}/${data.name}/contents/${this.filePath}`);
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
