@@ -100,20 +100,20 @@ export class ForkCard extends MUI {
 // Define the custom element
 window.customElements.define("fork-card", ForkCard);
 
-async function init() {
-    try {
-        const response = await fetch('/api/forks/ntijoh-linus-andersson/teacher');
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const data = await response.json();
-        console.log(data)
+// async function init() {
+//     try {
+//         const response = await fetch('/api/forks/ntijoh-linus-andersson/teacher');
+//         if (!response.ok) {
+//             throw new Error(`HTTP error! Status: ${response.status}`);
+//         }
+//         const data = await response.json();
+//         console.log(data)
 
-        // Append an instance of ForkCard to the body
-        document.querySelector("body").appendChild(new ForkCard(data[0], "README.md"));
-    } catch (error) {
-        console.error('Error fetching data:', error);
-    }
-}
+//         // Append an instance of ForkCard to the body
+//         document.querySelector("body").appendChild(new ForkCard(data[0], "README.md"));
+//     } catch (error) {
+//         console.error('Error fetching data:', error);
+//     }
+// }
 
-init();
+// init();
