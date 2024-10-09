@@ -1,29 +1,44 @@
+// Define the custom event for search
+class SearchEvent extends CustomEvent {
+    constructor(search) {
+        super("searchEvent", { bubbles: true, composed: true, detail: { search } });
+    }
+}
+
 // Define the custom element
 class SearchNavbar extends HTMLElement {
     constructor() {
         super();
         // Attach shadow DOM to the component
         this.attachShadow({ mode: 'open' });
+        this.shadowRoot.appendChild(this.#template());
 
-        // HTML content for the component
-        this.shadowRoot.innerHTML = `
-            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=person" />
+        // Add event listener for the search button
+        this.shadowRoot.querySelector('#searchButton').addEventListener('click', () => this.handleSearch());
+    }
+
+    // Template for the component
+    #template() {
+        const template = document.createElement("template");
+        template.innerHTML = `
+            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" />
             
             <style>
                 .material-symbols-outlined {
-                font-variation-settings:
-                'FILL' 0,
-                'wght' 400,
-                'GRAD' 0,
-                'opsz' 24
+                    font-variation-settings:
+                        'FILL' 0,
+                        'wght' 400,
+                        'GRAD' 0,
+                        'opsz' 24;
+                    color: white;
                 }
-                /* Scoped styles for the component */
                 .navbar {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
                     background-color: #333;
                     padding: 1em;
+                    color: white;
                 }
                 .navbar ul {
                     list-style-type: none;
@@ -61,28 +76,33 @@ class SearchNavbar extends HTMLElement {
                 .search-bar button:hover {
                     background-color: #777;
                 }
+                h1 {
+                    color: white;
+                }
             </style>
 
             <!-- HTML structure for the navbar -->
             <nav class="navbar">
-<span class="material-symbols-outlined">
-person
-</span>
+                <span class="material-symbols-outlined">person</span>
+                <h1>Welcome to the Search Navbar</h1>
                 <div class="search-bar">
                     <input type="text" id="searchInput" placeholder="Search...">
                     <button id="searchButton">Search</button>
                 </div>
             </nav>
         `;
-
-        // Add event listener for the search button
-        this.shadowRoot.querySelector('#searchButton').addEventListener('click', () => this.handleSearch());
+        return template.content.cloneNode(true);
     }
 
     // Search functionality
     handleSearch() {
         const searchQuery = this.shadowRoot.querySelector('#searchInput').value.toLowerCase();
-        const searchResultsDiv = document.getElementById('searchResults');
+        const searchResultsDiv = document.getElementById('searchResults'); // Ensure this element exists
+
+        if (!searchResultsDiv) {
+            console.error("Search results container is missing in the DOM.");
+            return;
+        }
 
         // Sample data to search through
         const sampleData = [
@@ -105,4 +125,4 @@ person
 }
 
 // Register the custom element
-customElements.define('search-navbar', SearchNavbar);
+window.customElements.define('search-navbar', SearchNavbar);
