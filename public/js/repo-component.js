@@ -1,5 +1,12 @@
 import { MUI } from "/js/mui.js";  // Assuming you're using MUI like before
 
+// Define the custom event for a repositorys forks
+export class ThisForkEvent extends CustomEvent {
+    constructor(name, owner) {
+        super("thisForkEvent", { bubbles: true, composed: true, detail: { name: name, owner: owner } });
+    }
+}
+
 export class RepoCard extends MUI {
     constructor(data) {
         super();
@@ -7,10 +14,17 @@ export class RepoCard extends MUI {
         this.owner = data.owner;
         this.name = data.name;
         this.repoPath = data.html_url;
-        this.forksPath = `/api/forks/${this.owner.login}/${this.name}`;  // Assuming you have a route to fetch forks
         this.forksCount = data.forks_count;  // Get the number of forks from the data
         this.attachShadow({ mode: "open" });
         this.shadowRoot.appendChild(this.#template());
+    }
+
+    connectedCallback(){
+        this.shadowRoot.querySelector('#show-fork').addeventlistener('click', this.#handleThisFork.bind(this))
+    }
+
+    #handleThisFork(e){
+        this.parentNode.dispatchEvent(new ThisForkEvent(this.owner, this.name))
     }
 
     #template() {
@@ -25,7 +39,7 @@ export class RepoCard extends MUI {
                     <div style="display: flex; align-items: center;">
                         <a href="${this.repoPath}" target="_blank">View on GitHub</a>
                         <span style="margin: 0 10px;">|</span>
-                        <a href="${this.forksPath}" target="_blank">View all Forks</a>
+                        <a href="#" id="show-fork" target="_blank">View all Forks</a>
                         <span style="margin-left: 10px; font-weight: bold;">(${this.forksCount})</span>
                     </div>
                 </div>
