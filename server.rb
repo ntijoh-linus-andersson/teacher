@@ -24,8 +24,7 @@ class Server < Sinatra::Base
     set :protection, false
 
     get '/' do
-        "The GitHub Auth Token is: #{ENV['GITHUB_AUTH_TOKEN']}"
-        
+        #"The GitHub Auth Token is: #{ENV['GITHUB_AUTH_TOKEN']}"
         erb :index
     end
 
