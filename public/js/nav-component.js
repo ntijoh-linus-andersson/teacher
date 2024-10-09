@@ -106,32 +106,6 @@ export class SearchNavbar extends HTMLElement {
         const search = e.target.search.value;
 
         this.parentNode.dispatchEvent(new SearchEvent(search));
-
-        // const searchQuery = this.shadowRoot.querySelector('#searchInput').value.toLowerCase();
-        // const searchResultsDiv = document.getElementById('searchResults'); // Ensure this element exists
-
-        // if (!searchResultsDiv) {
-        //     console.error("Search results container is missing in the DOM.");
-        //     return;
-        // }
-
-        // // Sample data to search through
-        // const sampleData = [
-        //     { id: 1, name: 'Home Page', url: '#' },
-        //     { id: 2, name: 'About Us', url: '#' },
-        //     { id: 3, name: 'Contact Page', url: '#' },
-        //     { id: 4, name: 'Services', url: '#' },
-        // ];
-
-        // // Filter the data based on the search query
-        // const filteredData = sampleData.filter(item => item.name.toLowerCase().includes(searchQuery));
-
-        // // Display the results
-        // if (filteredData.length > 0) {
-        //     searchResultsDiv.innerHTML = filteredData.map(item => `<p><a href="${item.url}">${item.name}</a></p>`).join('');
-        // } else {
-        //     searchResultsDiv.innerHTML = '<p>No results found</p>';
-        // }
     }
 }
 
