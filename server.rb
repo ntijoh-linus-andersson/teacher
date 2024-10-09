@@ -29,6 +29,35 @@ class Server < Sinatra::Base
         erb :index
     end
 
+    # Endpoint to get repos of a specific GitHub repository
+    get '/api/repos/:owner' do
+        owner = params['owner']  # Local variable for owner
+    
+        # Correct the API request URL
+        url = "https://api.github.com/users/#{owner}/repos"
+    
+        # Perform the API request
+        response = HTTParty.get(
+            url,
+            headers: {
+                "Accept" => "application/vnd.github+json",
+                "Authorization" => "Bearer #{ENV['GITHUB_AUTH_TOKEN']}",  # Use environment variable for the token
+                "X-GitHub-Api-Version" => "2022-11-28"
+            }
+        )
+        
+        # Check for a successful response
+        if response.success?
+            repos = response.parsed_response  # Parse the JSON response
+            repos.to_json  # Return the response as JSON
+        else
+            status response.code  # Set the response status to the response code from GitHub
+            { error: response.parsed_response['message'] }.to_json  # Return an error message as JSON
+        end
+    end
+    
+    
+
     # Endpoint to get forks of a specific GitHub repository
     get '/api/forks/:owner/:repo' do
         owner = params['owner']  # Local variable for owner
