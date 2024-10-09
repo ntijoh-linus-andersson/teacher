@@ -1,4 +1,6 @@
 require 'sinatra'
+require 'sqlite3'
+require 'json'
 require 'debug'
 require 'dotenv/load'
 require 'httparty'
