@@ -54,26 +54,6 @@ class Server < Sinatra::Base
             { error: response.parsed_response['message'] }.to_json  # Return an error message as JSON
         end
     end
-    
-    
-    get '/api/manifest' do 
-        content_type :json # Specify the content type to be JSON
-
-        begin
-            # Read the JSON file
-            file = File.read('.manifest.json')
-            
-            # Parse the JSON content
-            manifest_data = JSON.parse(file)
-
-            # Return the JSON response
-            manifest_data.to_json
-        rescue StandardError => e
-            # Handle any errors (e.g., file not found, invalid JSON, etc.)
-            status 500
-            { error: 'Could not read manifest file', message: e.message }.to_json
-        end
-    end
 
     # Endpoint to get forks of a specific GitHub repository
     get '/api/forks/:owner/:repo' do
@@ -105,7 +85,6 @@ class Server < Sinatra::Base
 
     # Endpoint to get forks of a specific GitHub repository
     get '/api/forks/:owner/:repo/contents/:filepath' do
-        puts("yooo")
         owner = params['owner']  # Local variable for owner
         repo = params['repo']    # Local variable for repo
         filePath = params['filepath']    # Local variable for repo
