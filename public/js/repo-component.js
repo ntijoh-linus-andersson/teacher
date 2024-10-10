@@ -11,7 +11,6 @@ export class RepoCard extends MUI {
     constructor(data) {
         super();
         this.data = data;
-        console.log(this.data)
         this.owner = data.owner;
         this.name = data.name;
         this.repoPath = data.html_url;
