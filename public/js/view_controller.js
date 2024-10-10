@@ -1,5 +1,6 @@
+import { RepoContainer } from "./repo_container.js";
 import { ForkContainer } from "./fork_container_component.js";
-import { RepoCard } from "./repo-component.js";
+
 
 class ViewController extends HTMLElement {
     constructor() {
@@ -42,14 +43,13 @@ class ViewController extends HTMLElement {
     async #buildRepos(ownerName) {
         this.#resetView();
         const data = await this.#getRepo(ownerName);
+        
 
         if (!data) {
             return;
         }
 
-        data.forEach(repo => {
-            this.shadowRoot.appendChild(new RepoCard(repo));
-        });
+        this.shadowRoot.appendChild(new RepoContainer(data))
     }
 
     async #buildForks(ownerName, repoName) {

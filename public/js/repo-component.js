@@ -11,6 +11,7 @@ export class RepoCard extends MUI {
     constructor(data) {
         super();
         this.data = data;
+        console.log(this.data)
         this.owner = data.owner;
         this.name = data.name;
         this.repoPath = data.html_url;
@@ -21,6 +22,10 @@ export class RepoCard extends MUI {
 
     connectedCallback(){
         this.shadowRoot.querySelector('#show-fork').addEventListener('click', this.#handleThisFork.bind(this))
+    }
+
+    disconnectedCallback(){
+        this.shadowRoot.querySelector('#show-fork').removeEventListener('click', this.#handleThisFork.bind(this))
     }
 
     #handleThisFork(e){
