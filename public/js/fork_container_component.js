@@ -1,10 +1,9 @@
 import { ForkCard } from "./fork_component.js";
 
 export class ForkContainer extends HTMLElement {
-    constructor(data, filePath) {
+    constructor(data) {
         super();
         this.data = data;
-        this.filePath = filePath;
         this.attachShadow({mode: 'open'});
         this.shadowRoot.appendChild(this.#template());
         this.style.display = "flex";
@@ -20,7 +19,7 @@ export class ForkContainer extends HTMLElement {
         const container = this.shadowRoot.querySelector('#fork-container');
         
         Object.keys(this.data).forEach(key => {
-            container.appendChild(new ForkCard(this.data[key], this.filePath));
+            container.appendChild(new ForkCard(this.data[key]));
         });   
     }
 
