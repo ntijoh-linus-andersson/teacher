@@ -123,4 +123,31 @@ class Server < Sinatra::Base
         #                       [payload['name'], payload['email'], payload['phone'], payload['department_id'], payload['img'], id])
         # return {result: 'success'}.to_json
     end
+
+    # Route to add grade and comment for a specific fork/repository
+post '/api/feedback' do
+    # Parse the incoming JSON payload
+    payload = JSON.parse(request.body.read)
+
+    # Extract the necessary data from the payload
+    repository = payload['repository']
+    fork = payload['fork']
+    comment = payload['comment']
+    grade = payload['grade']
+
+    # Ensure all required data is present
+    if repository && fork && comment && grade
+        # Insert the feedback into the database
+        @db.execute('INSERT INTO fork-feedback (repository, fork, comment, grade) VALUES (?, ?, ?, ?)',
+                    [repository, fork, comment, grade])
+        
+        # Return a success response
+        { status: 'success', message: 'Feedback submitted successfully' }.to_json
+    else
+        # If any data is missing, return an error
+        status 400
+        { status: 'error', message: 'Missing required parameters' }.to_json
+    end
+end
+
 end
