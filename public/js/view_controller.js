@@ -47,6 +47,7 @@ class ViewController extends HTMLElement {
 
         if (!data) {
             return;
+
         }
             this.shadowRoot.appendChild(new RepoContainer(data))
     }
