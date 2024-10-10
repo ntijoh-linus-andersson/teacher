@@ -12,7 +12,7 @@ export class RepoCard extends MUI {
         super();
         this.data = data;
         console.log(this.data)
-        this.owner = data.owner.login;
+        this.owner = data.owner;
         this.name = data.name;
         this.repoPath = data.html_url;
         this.forksCount = data.forks_count;  // Get the number of forks from the data
