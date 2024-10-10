@@ -1,10 +1,9 @@
 import { MUI } from "/js/mui.js";
 
 export class ForkCard extends MUI {
-    constructor(data, filePath) {
+    constructor(data) {
         super();
         this.data = data;
-        this.filePath = filePath
         this.owner = data.owner;
         this.name = data.name;
         this.repoPath = data.html_url;
@@ -16,28 +15,38 @@ export class ForkCard extends MUI {
 
     async init() {
         try {
-            this.content = await this.#getContent(this.data);
+            this.manifest = await JSON.parse(await this.#getContent(this.owner.login, this.name, ".manifest.json"));
+            this.content = await this.#getContent(this.owner.login, this.name, this.manifest["filePath"]);
             this.#updateTemplate();
         } catch (error) {
             console.error('Error fetching content:', error);
         }
     }
 
-    async #getContent(data) {
-        if (!data) {
+    async #getFile(owner, name, filePath) {
+        if (!owner || !name || !filePath) {
             return null;
         }
     
-        const response = await fetch(`/api/forks/${data.owner.login}/${data.name}/contents/${this.filePath}`);
+        const response = await fetch(`/api/forks/${owner}/${name}/${filePath}`);
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
     
-        const content = await response.json();
-        
-        const decodedContent = atob(content.content);
+        return await response.json();
+    }
+
+    async #getContent(owner, name, filePath) {
+        console.log(filePath);
+        if (!owner || !name || !filePath) {
+            return null;
+        }
     
-        return decodedContent.replace(/\n/g, '<br>');
+        const content = await this.#getFile(owner, name, filePath);
+        console.log(content)
+        const decodedContent = atob(content.content);
+        
+        return decodedContent;
     }
 
     #template() {
@@ -50,12 +59,12 @@ export class ForkCard extends MUI {
                 </div>
                 <div class="mdl-card__supporting-text">
                     <div style="background-color: #3e3e42; color: white; padding: 10px;">
-                        ${this.content || 'Loading...'}
+                        ${this.content ? this.content.replace(/\n/g, '<br/>'): 'Loading...'}
                     </div>
                     <br />
                     <a href="${this.repoPath}">Show on Github</a>
                 </div>
-                <div class="mdl-card__actions mdl-card--border">
+                <div id="test-container" class="mdl-card__actions mdl-card--border">
 
                 </div>
                 <div class="mdl-card__actions mdl-card--border">
