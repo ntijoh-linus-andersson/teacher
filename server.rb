@@ -5,83 +5,132 @@ require 'debug'
 require 'dotenv/load'
 require 'httparty'
 
-# use binding.break for debug
-
 class Server < Sinatra::Base
+    enable :sessions
+  def initialize
+    super
+    @db = SQLite3::Database.new('db/teacher.db')
+    @db.results_as_hash = true
+    Dotenv.load('GitHub-authtoken.env')
+  end
 
-    def initialize
-        super
-        @db = SQLite3::Database.new('db/teacher.db')
-        @db.results_as_hash = true
-        Dotenv.load('GitHub-authtoken.env')
+  before do
+    headers 'Access-Control-Allow-Origin' => '*',
+            'Access-Control-Allow-Methods' => ['GET', 'POST']
+  end
+
+  set :protection, false
+
+  # Home route
+  get '/' do
+    erb :index
+  end
+
+  # GitHub OAuth - Step 1: Redirect to GitHub for Authorization
+  get '/auth/github' do
+    github_client_id = ENV['GITHUB_CLIENT_ID']
+    redirect_uri = "http://localhost:9292/callback"
+    scope = "user repo"
+
+    redirect "https://github.com/login/oauth/authorize?client_id=#{github_client_id}&redirect_uri=#{redirect_uri}&scope=#{scope}"
+  end
+
+  # GitHub OAuth - Step 2: Handle GitHub's Callback and Exchange Code for Token
+  get '/callback' do
+    code = params['code'] 
+
+    # Exchange the authorization code for an access token
+    uri = URI("https://github.com/login/oauth/access_token")
+    res = Net::HTTP.post_form(uri, {
+      'client_id' => ENV['GITHUB_CLIENT_ID'],
+      'client_secret' => ENV['GITHUB_CLIENT_SECRET'],
+      'code' => code
+    })
+
+    # Parse the response to extract the access token
+    response_params = URI.decode_www_form(res.body).to_h
+
+    if response_params['access_token']
+      session[:access_token] = response_params['access_token']  # Store access token in session
+      redirect '/'
+    else
+      halt 500, "Failed to retrieve access token: #{response_params['error_description'] || 'Unknown error'}"
     end
+  end
 
-    before do
-        headers 'Access-Control-Allow-Origin' => '*',
-                'Access-Control-Allow-Methods' => ['GET', 'POST']
+  # Protected route: Fetch user info from GitHub using the access token
+  get '/profile' do
+    access_token = session[:access_token]
+    halt 401, "Unauthorized" unless access_token
+
+    # Use access token to fetch user data from GitHub
+    response = HTTParty.get(
+      "https://api.github.com/user",
+      headers: { "Authorization" => "token #{access_token}", "User-Agent" => "Sinatra-App" }
+    )
+
+    if response.code == 200
+      user_data = response.parsed_response
+      erb :profile, locals: { user_data: user_data }
+    else
+      halt 500, "Failed to fetch user information: #{response.parsed_response['message'] || 'Unknown error'}"
     end
+  end
 
-    set :protection, false
-
-    get '/' do
-        #"The GitHub Auth Token is: #{ENV['GITHUB_AUTH_TOKEN']}"
-        erb :index
-    end
-
-    # Endpoint to get repos of a specific GitHub repository
-    get '/api/repos/:owner' do
-        owner = params['owner']  # Local variable for owner
+  # Endpoint to get repos of a specific GitHub repository
+  get '/api/repos/:owner' do
+    owner = params['owner']  # Local variable for owner
     
-        # Correct the API request URL
-        url = "https://api.github.com/users/#{owner}/repos"
+    # Correct the API request URL
+    url = "https://api.github.com/users/#{owner}/repos"
     
-        # Perform the API request
-        response = HTTParty.get(
-            url,
-            headers: {
-                "Accept" => "application/vnd.github+json",
-                "Authorization" => "Bearer #{ENV['GITHUB_AUTH_TOKEN']}",  # Use environment variable for the token
-                "X-GitHub-Api-Version" => "2022-11-28"
-            }
-        )
-        
-        # Check for a successful response
-        if response.success?
-            repos = response.parsed_response  # Parse the JSON response
-            repos.to_json  # Return the response as JSON
-        else
-            status response.code  # Set the response status to the response code from GitHub
-            { error: response.parsed_response['message'] }.to_json  # Return an error message as JSON
-        end
+    # Perform the API request
+    response = HTTParty.get(
+      url,
+      headers: {
+        "Accept" => "application/vnd.github+json",
+        "Authorization" => "Bearer #{ENV['GITHUB_AUTH_TOKEN']}",  # Use environment variable for the token
+        "X-GitHub-Api-Version" => "2022-11-28"
+      }
+    )
+    
+    # Check for a successful response
+    if response.success?
+      repos = response.parsed_response  # Parse the JSON response
+      repos.to_json  # Return the response as JSON
+    else
+      status response.code  # Set the response status to the response code from GitHub
+      { error: response.parsed_response['message'] }.to_json  # Return an error message as JSON
     end
+  end
 
-    # Endpoint to get forks of a specific GitHub repository
-    get '/api/forks/:owner/:repo' do
-        owner = params['owner']  # Local variable for owner
-        repo = params['repo']    # Local variable for repo
+  # Endpoint to get forks of a specific GitHub repository
+  get '/api/forks/:owner/:repo' do
+    owner = params['owner']  # Local variable for owner
+    repo = params['repo']    # Local variable for repo
 
-        # Construct the API request URL
-        url = "https://api.github.com/repos/#{owner}/#{repo}/forks"
+    # Construct the API request URL
+    url = "https://api.github.com/repos/#{owner}/#{repo}/forks"
     
-        # Perform the API request
-        response = HTTParty.get(
-            url,
-            headers: {
-                "Accept" => "application/vnd.github+json",
-                "Authorization" => "Bearer #{ENV['GITHUB_AUTH_TOKEN']}",  # Use environment variable for the token
-                "X-GitHub-Api-Version" => "2022-11-28"
-            }
-        )
+    # Perform the API request
+    response = HTTParty.get(
+      url,
+      headers: {
+        "Accept" => "application/vnd.github+json",
+        "Authorization" => "Bearer #{ENV['GITHUB_AUTH_TOKEN']}",  # Use environment variable for the token
+        "X-GitHub-Api-Version" => "2022-11-28"
+      }
+    )
     
-        # Check for a successful response
-        if response.success?
-            forks = response.parsed_response  # Parse the JSON response
-            forks.to_json  # Return the response as JSON
-        else
-            status response.code  # Set the response status to the response code from GitHub
-            { error: response.parsed_response['message'] }.to_json  # Return an error message as JSON
-        end
+    # Check for a successful response
+    if response.success?
+      forks = response.parsed_response  # Parse the JSON response
+      forks.to_json  # Return the response as JSON
+    else
+      status response.code  # Set the response status to the response code from GitHub
+      { error: response.parsed_response['message'] }.to_json  # Return an error message as JSON
     end
+  end
 
     # Endpoint to get forks of a specific GitHub repository
     get '/api/forks/:owner/:repo/*' do
@@ -89,43 +138,31 @@ class Server < Sinatra::Base
         repo = params['repo']    # Capture the repo
         filePath = params['splat'].first  # Capture the full file path
 
-        # Construct the API request URL
-        url = "https://api.github.com/repos/#{owner}/#{repo}/contents/#{filePath}"
+    # Construct the API request URL
+    url = "https://api.github.com/repos/#{owner}/#{repo}/contents/#{filePath}"
     
-        # Perform the API request
-        response = HTTParty.get(
-            url,
-            headers: {
-                "Accept" => "application/vnd.github+json",
-                "Authorization" => "Bearer #{ENV['GITHUB_AUTH_TOKEN']}",  # Use environment variable for the token
-                "X-GitHub-Api-Version" => "2022-11-28"
-            }
-        )
+    # Perform the API request
+    response = HTTParty.get(
+      url,
+      headers: {
+        "Accept" => "application/vnd.github+json",
+        "Authorization" => "Bearer #{ENV['GITHUB_AUTH_TOKEN']}",  # Use environment variable for the token
+        "X-GitHub-Api-Version" => "2022-11-28"
+      }
+    )
     
-        # Check for a successful response
-        if response.success?
-            forks = response.parsed_response  # Parse the JSON response
-            forks.to_json  # Return the response as JSON
-        else
-            status response.code  # Set the response status to the response code from GitHub
-            { error: response.parsed_response['message'] }.to_json  # Return an error message as JSON
-        end
+    # Check for a successful response
+    if response.success?
+      content = response.parsed_response  # Parse the JSON response
+      content.to_json  # Return the response as JSON
+    else
+      status response.code  # Set the response status to the response code from GitHub
+      { error: response.parsed_response['message'] }.to_json  # Return an error message as JSON
     end
+  end
 
-    #update
-    post '/api/comment/:id' do
-        # id = params['id']
-        # payload = JSON.parse request.body.read # data sent using fetch is placed in request body
-        # content_type :json
-        # result = @db.execute('UPDATE employees
-        #                       SET name=?, email=?, phone=?, department_id=?, img=?
-        #                       WHERE id = ?',
-        #                       [payload['name'], payload['email'], payload['phone'], payload['department_id'], payload['img'], id])
-        # return {result: 'success'}.to_json
-    end
-
-    # Route to add grade and comment for a specific fork/repository
-post '/api/feedback' do
+  # Route to add grade and comment for a specific fork/repository
+  post '/api/feedback' do
     # Parse the incoming JSON payload
     payload = JSON.parse(request.body.read)
 
@@ -137,17 +174,17 @@ post '/api/feedback' do
 
     # Ensure all required data is present
     if repository && fork && comment && grade
-        # Insert the feedback into the database
-        @db.execute('INSERT INTO fork-feedback (repository, fork, comment, grade) VALUES (?, ?, ?, ?)',
-                    [repository, fork, comment, grade])
-        
-        # Return a success response
-        { status: 'success', message: 'Feedback submitted successfully' }.to_json
+      # Insert the feedback into the database
+      @db.execute('INSERT INTO fork_feedback (repository, fork, comment, grade) VALUES (?, ?, ?, ?)',
+                  [repository, fork, comment, grade])
+      
+      # Return a success response
+      { status: 'success', message: 'Feedback submitted successfully' }.to_json
     else
-        # If any data is missing, return an error
-        status 400
-        { status: 'error', message: 'Missing required parameters' }.to_json
+      # If any data is missing, return an error
+      status 400
+      { status: 'error', message: 'Missing required parameters' }.to_json
     end
-end
+  end
 
 end
