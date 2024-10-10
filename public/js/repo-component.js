@@ -11,7 +11,8 @@ export class RepoCard extends MUI {
     constructor(data) {
         super();
         this.data = data;
-        this.owner = data.owner;
+        console.log(this.data)
+        this.owner = data.owner.login;
         this.name = data.name;
         this.repoPath = data.html_url;
         this.forksCount = data.forks_count;  // Get the number of forks from the data
@@ -20,7 +21,11 @@ export class RepoCard extends MUI {
     }
 
     connectedCallback(){
-        this.shadowRoot.querySelector('#show-fork').addeventlistener('click', this.#handleThisFork.bind(this))
+        this.shadowRoot.querySelector('#show-fork').addEventListener('click', this.#handleThisFork.bind(this))
+    }
+
+    disconnectedCallback(){
+        this.shadowRoot.querySelector('#show-fork').removeEventListener('click', this.#handleThisFork.bind(this))
     }
 
     #handleThisFork(e){
