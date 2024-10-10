@@ -41,17 +41,38 @@ class ViewController extends HTMLElement {
 
     async #buildRepos(ownerName) {
         this.#resetView();
-        const data = await this.#getRepo(ownerName);
+    
+        try {
+            // Try to fetch repo data from the API
+            const data = await this.#getRepo(ownerName);
+    
+            // Check if no data is returned (e.g., user not found)
+            if (!data || data.length === 0) {
+                const template = document.createElement('template');
+                template.innerHTML = `
+                    <h1>User not found or has no repositories</h1>
+                <img src="/img/no-matches.jpeg" style="width: 50%; height: auto;">
 
-        if (!data) {
-            return;
+                `;
+                this.shadowRoot.appendChild(template.content.cloneNode(true));
+                return;
+            }
+    
+            // If data exists, iterate over repos and create RepoCard elements
+            data.forEach(repo => {
+                this.shadowRoot.appendChild(new RepoCard(repo));
+            });
+    
+        } catch (error) {
+            // If there was an error during the API call (e.g., user not found or network error)
+            const template = document.createElement('template');
+            template.innerHTML = `
+                <h1>Error: ${error.message}</h1>
+            `;
+            this.shadowRoot.appendChild(template.content.cloneNode(true));
         }
-
-        data.forEach(repo => {
-            this.shadowRoot.appendChild(new RepoCard(repo));
-        });
     }
-
+    
     async #buildForks(ownerName, repoName) {
         this.#resetView();
         const data = await this.#getForks(ownerName, repoName);
