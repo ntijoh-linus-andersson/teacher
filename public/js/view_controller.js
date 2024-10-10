@@ -1,5 +1,6 @@
+import { RepoContainer } from "./repo_container.js";
 import { ForkContainer } from "./fork_container_component.js";
-import { RepoCard } from "./repo-component.js";
+
 
 class ViewController extends HTMLElement {
     constructor() {
