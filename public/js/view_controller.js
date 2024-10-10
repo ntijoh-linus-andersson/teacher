@@ -43,14 +43,24 @@ class ViewController extends HTMLElement {
     async #buildRepos(ownerName) {
         this.#resetView();
         const data = await this.#getRepo(ownerName);
-
-
-        if (!data) {
+    
+        // If no data is returned, show error message and image
+        if (!data || data.length === 0) {
+            const errorTemplate = document.createElement('template');
+            errorTemplate.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <p>No repositories found for the user "${ownerName}".</p>
+                    <img src="/img/no-matches.jpeg" style="max-width: 300px; height: auto;">
+                </div>
+            `;
+            this.shadowRoot.appendChild(errorTemplate.content.cloneNode(true));
             return;
-
         }
-            this.shadowRoot.appendChild(new RepoContainer(data))
+    
+        // If data exists, append the RepoContainer with the data
+        this.shadowRoot.appendChild(new RepoContainer(data));
     }
+    
 
     
     async #buildForks(ownerName, repoName) {
