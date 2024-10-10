@@ -23,7 +23,21 @@ class Server < Sinatra::Base
 
   # Home route
   get '/' do
-    erb :index
+    access_token = session[:access_token]
+    if access_token == nil
+        redirect '/login'
+    else
+        erb :index
+    end
+  end
+
+  get '/login' do
+    access_token = session[:access_token]
+    if access_token != nil
+        redirect '/'
+    else
+        erb :login
+    end
   end
 
   # GitHub OAuth - Step 1: Redirect to GitHub for Authorization
@@ -59,23 +73,23 @@ class Server < Sinatra::Base
   end
 
   # Protected route: Fetch user info from GitHub using the access token
-  get '/profile' do
-    access_token = session[:access_token]
-    halt 401, "Unauthorized" unless access_token
+#   get '/profile' do
+#     access_token = session[:access_token]
+#     halt 401, "Unauthorized" unless access_token
 
-    # Use access token to fetch user data from GitHub
-    response = HTTParty.get(
-      "https://api.github.com/user",
-      headers: { "Authorization" => "token #{access_token}", "User-Agent" => "Sinatra-App" }
-    )
+#     # Use access token to fetch user data from GitHub
+#     response = HTTParty.get(
+#       "https://api.github.com/user",
+#       headers: { "Authorization" => "token #{access_token}", "User-Agent" => "Sinatra-App" }
+#     )
 
-    if response.code == 200
-      user_data = response.parsed_response
-      erb :profile, locals: { user_data: user_data }
-    else
-      halt 500, "Failed to fetch user information: #{response.parsed_response['message'] || 'Unknown error'}"
-    end
-  end
+#     if response.code == 200
+#       user_data = response.parsed_response
+#       erb :profile, locals: { user_data: user_data }
+#     else
+#       halt 500, "Failed to fetch user information: #{response.parsed_response['message'] || 'Unknown error'}"
+#     end
+#   end
 
   # Endpoint to get repos of a specific GitHub repository
   get '/api/repos/:owner' do

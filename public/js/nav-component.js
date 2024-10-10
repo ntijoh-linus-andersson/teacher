@@ -45,13 +45,6 @@ export class SearchNavbar extends HTMLElement {
                     padding: 1em;
                     color: white;
                 }
-                .navbar ul {
-                    list-style-type: none;
-                    display: flex;
-                    gap: 1em;
-                    margin: 0;
-                    padding: 0;
-                }
                 .navbar a {
                     color: white;
                     text-decoration: none;
