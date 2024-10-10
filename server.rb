@@ -132,11 +132,11 @@ class Server < Sinatra::Base
     end
   end
 
-  # Endpoint to get contents of a specific file in a GitHub repository
-  get '/api/forks/:owner/:repo/contents/:filepath' do
-    owner = params['owner']  # Local variable for owner
-    repo = params['repo']    # Local variable for repo
-    filePath = params['filepath']    # Local variable for file path
+    # Endpoint to get forks of a specific GitHub repository
+    get '/api/forks/:owner/:repo/*' do
+        owner = params['owner']  # Capture the owner
+        repo = params['repo']    # Capture the repo
+        filePath = params['splat'].first  # Capture the full file path
 
     # Construct the API request URL
     url = "https://api.github.com/repos/#{owner}/#{repo}/contents/#{filePath}"

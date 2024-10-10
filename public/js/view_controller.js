@@ -71,7 +71,7 @@ class ViewController extends HTMLElement {
             return;
         }
 
-        this.shadowRoot.appendChild(new ForkContainer(data, "README.md"));
+        this.shadowRoot.appendChild(new ForkContainer(data));
     }
 
     #resetView() {
