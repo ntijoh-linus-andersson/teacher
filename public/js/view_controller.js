@@ -55,14 +55,9 @@ class ViewController extends HTMLElement {
                 <img src="/img/no-matches.jpeg" style="width: 50%; height: auto;">
 
                 `;
-                this.shadowRoot.appendChild(template.content.cloneNode(true));
-                return;
             }
-    
-            // If data exists, iterate over repos and create RepoCard elements
-            data.forEach(repo => {
-                this.shadowRoot.appendChild(new RepoCard(repo));
-            });
+            
+            this.shadowRoot.appendChild(new RepoContainer(data))
     
         } catch (error) {
             // If there was an error during the API call (e.g., user not found or network error)
