@@ -2,8 +2,8 @@ import { MUI } from "/js/mui.js";  // Assuming you're using MUI like before
 
 // Define the custom event for a repositorys forks
 export class ThisForkEvent extends CustomEvent {
-    constructor(name, owner) {
-        super("thisForkEvent", { bubbles: true, composed: true, detail: { name: name, owner: owner } });
+    constructor(owner, name) {
+        super("thisForkEvent", { bubbles: true, composed: true, detail: { owner: owner, name: name } });
     }
 }
 
@@ -20,11 +20,12 @@ export class RepoCard extends MUI {
     }
 
     connectedCallback(){
-        this.shadowRoot.querySelector('#show-fork').addeventlistener('click', this.#handleThisFork.bind(this))
+        this.shadowRoot.querySelector('#show-fork').addEventListener('click', this.#handleThisFork.bind(this))
     }
 
     #handleThisFork(e){
-        this.parentNode.dispatchEvent(new ThisForkEvent(this.owner, this.name))
+        e.preventDefault();
+        this.parentNode.dispatchEvent(new ThisForkEvent(this.owner.login, this.name))
     }
 
     #template() {
