@@ -1,4 +1,4 @@
-import { ForkCard } from "./fork_component.js";
+import { ForkContainer } from "./fork_container_component.js";
 import { RepoCard } from "./repo-component.js";
 
 class ViewController extends HTMLElement {
@@ -10,10 +10,12 @@ class ViewController extends HTMLElement {
     
     connectedCallback(){
         this.shadowRoot.addEventListener('searchEvent', this.#handleSearch.bind(this))
+        this.shadowRoot.addEventListener('thisForkEvent', this.#handleFork.bind(this))
     }
 
     disconnectedCallback(){
-        this.shadowRoot.removeEventListener('searchEvent', this.#handleSearch.bind(this))
+        this.shadowRoot.addEventListener('searchEvent', this.#handleSearch.bind(this))
+        this.shadowRoot.removeEventListener('thisForkEvent', this.#handleFork.bind(this))
     }
 
     async #handleSearch(e) {
@@ -27,7 +29,14 @@ class ViewController extends HTMLElement {
     }
 
     async #handleFork(e) {
-        
+        const ownerName = e.detail.owner;
+        const repoName = e.detail.name;
+
+        if (!ownerName || !repoName) {
+            return;
+        }
+
+        await this.#buildForks(ownerName, repoName);
     }
 
     async #buildRepos(ownerName) {
@@ -51,8 +60,7 @@ class ViewController extends HTMLElement {
             return;
         }
 
-        // Append an instance of ForkCard to the body
-        this.shadowRoot.appendChild(new ForkCard(data[0], "README.md"));
+        this.shadowRoot.appendChild(new ForkContainer(data, "README.md"));
     }
 
     #resetView() {
