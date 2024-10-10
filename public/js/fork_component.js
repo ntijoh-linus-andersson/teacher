@@ -63,7 +63,7 @@ export class ForkCard extends MUI {
                         <input type="text" placeholder="Comment">
 
                         <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="radio-1">
-                            <input type="radio" id="radio-1" class="mdl-radio__button" name="options" value="1" checked>
+                            <input type="radio" id="radio-1" class="mdl-radio__button" name="options" value="1">
                             <span class="mdl-radio__label" style="display: flex; align-items: center;"><i class="material-icons">check</i> Klar</span>
                         </label> <br/> <br/>
                         
@@ -73,7 +73,7 @@ export class ForkCard extends MUI {
                         </label> <br/> <br/>
                         
                         <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="radio-3">
-                            <input type="radio" id="radio-3" class="mdl-radio__button" name="options" value="3">
+                            <input type="radio" id="radio-3" class="mdl-radio__button" name="options" value="3" checked>
                             <span class="mdl-radio__label" style="display: flex; align-items: center;"><i class="material-icons">refresh</i> Ej Bedömd</span>
                         </label> <br/> <br/>
 
