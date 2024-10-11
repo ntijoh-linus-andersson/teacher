@@ -72,6 +72,13 @@ class Server < Sinatra::Base
     end
   end
 
+  # Logout route
+get '/logout' do
+    session.clear  # Clear the session data
+    redirect '/login'  # Redirect to the login page
+  end
+  
+
   # Protected route: Fetch user info from GitHub using the access token
 #   get '/profile' do
 #     access_token = session[:access_token]
@@ -200,5 +207,25 @@ class Server < Sinatra::Base
       { status: 'error', message: 'Missing required parameters' }.to_json
     end
   end
+
+  # Fetch user info from GitHub using the access token
+get '/api/user' do
+    access_token = session[:access_token]
+    halt 401, "Unauthorized" unless access_token
+  
+    # Use access token to fetch user data from GitHub
+    response = HTTParty.get(
+      "https://api.github.com/user",
+      headers: { "Authorization" => "token #{access_token}", "User-Agent" => "Sinatra-App" }
+    )
+  
+    if response.code == 200
+      user_data = response.parsed_response
+      { username: user_data['login'] }.to_json  # Return only the username as JSON
+    else
+      halt 500, "Failed to fetch user information: #{response.parsed_response['message'] || 'Unknown error'}"
+    end
+  end
+  
 
 end
