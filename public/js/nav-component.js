@@ -50,6 +50,10 @@ export class SearchNavbar extends HTMLElement {
             <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" />
     
             <style>
+                :host {
+                    display: block;
+                    width: 100%;
+                }
                 .material-symbols-outlined {
                     font-variation-settings:
                         'FILL' 0,
@@ -58,32 +62,36 @@ export class SearchNavbar extends HTMLElement {
                         'opsz' 24;
                     color: white;
                     cursor: pointer;
+                    display: flex; /* Center the icon */
+                    align-items: center; /* Center the icon vertically */
+                    justify-content: center; /* Center the icon horizontally */
+                    height: 100%; /* Make icon height equal to parent */
                 }
                 .navbar {
                     display: flex;
-                    justify-content: space-between;
                     align-items: center;
                     background-color: #2b2b2b; /* Darker shade for modern look */
                     padding: 1em 2em;
                     color: white;
                     font-family: 'Arial', sans-serif;
                     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); /* Subtle shadow for depth */
+                    justify-content: space-between; /* Space between elements */
                 }
-                .navbar a {
+                .navbar h1 {
+                    margin: 0;
+                    font-size: 1.5em;
                     color: white;
-                    text-decoration: none;
-                    padding: 0.5em 1em;
-                    transition: background-color 0.3s ease, transform 0.3s ease;
-                    border-radius: 5px;
+                    text-align: center; /* Center the text */
+                    flex: 1; /* Allow the heading to grow and center */
+                    padding-left: 260px; /* Add slight padding for spacing */
                 }
-                .navbar a:hover {
-                    background-color: #444;
-                    transform: scale(1.05); /* Slightly enlarge on hover */
+                .navbar .dropdown {
+                    flex: 0 0 auto; /* Prevent dropdown from growing */
                 }
                 .search-bar {
                     display: flex;
                     gap: 0.5em;
-                    align-items: center;
+                    align-items: stretch; /* Stretch items to be the same height */
                 }
                 .search-bar input {
                     padding: 0.5em;
@@ -105,6 +113,7 @@ export class SearchNavbar extends HTMLElement {
                     border-radius: 3px;
                     cursor: pointer;
                     transition: background-color 0.3s ease, transform 0.3s ease;
+                    height: 100%; /* Match the button height to the input field */
                 }
                 .search-bar button:hover {
                     background-color: #666;
@@ -114,15 +123,15 @@ export class SearchNavbar extends HTMLElement {
                 /* Dropdown Menu */
                 .dropdown {
                     position: relative;
-                    display: inline-block;
+                    display: flex;
+                    align-items: center; /* Center the dropdown items */
                 }
-    
                 .dropdown-content {
                     display: none;
                     position: absolute;
                     background-color: white;
                     min-width: 160px;
-                    right: 10;
+                    right: 10; /* Align to the right */
                     top: 100%;
                     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Softer shadow */
                     border-radius: 5px;
@@ -146,18 +155,12 @@ export class SearchNavbar extends HTMLElement {
                 .dropdown:hover .dropdown-content {
                     display: block;
                 }
-
-                h1 {
-                    margin: 0;
-                    font-size: 1.5em;
-                    color: white;
-                }
             </style>
     
             <!-- HTML structure for the navbar with dropdown -->
             <nav class="navbar">
                 <div class="dropdown">
-                    <span class="material-symbols-outlined dropbtn">person</span>
+                    <span class="material-symbols-outlined dropbtn" style="width: 48px; height: 48px;">person</span>
                     <div class="dropdown-content">
                         <span id="username">User</span> <!-- Placeholder for the username -->
                         <a href="/logout">Logout</a>
