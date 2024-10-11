@@ -46,6 +46,7 @@ export class LoginPage extends HTMLElement{
         if (data.status == 'success') {
             this.parentNode.dispatchEvent(new LoginEvent(username));
         }else{
+            alert("Lösenordet eller användarnamnet stämmer ej!")
             throw new Error (`login error! Status: ${data.status}`);
         }
   
@@ -55,7 +56,7 @@ export class LoginPage extends HTMLElement{
         const template = document.createElement('template');
         template.innerHTML = `
         <style>
-            container1 {
+            .container1 {
                 font-family: Arial, sans-serif;
                 background-color: #f4f4f4;
                 color: #333;
