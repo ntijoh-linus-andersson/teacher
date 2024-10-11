@@ -273,12 +273,21 @@ end
 
       # Ensure all required data is present
       if repository && owner && comment && grade
-        # Insert the feedback into the database
-        @db.execute('INSERT INTO fork_feedback (repository, owner, comment, grade) VALUES (?, ?, ?, ?)',
-                    [repository, owner, comment, grade])
-        
-        # Return a success response
-        { status: 'success', message: 'Feedback submitted successfully' }.to_json
+        if !@db.execute('SELECT * from fork_feedback where repository=?', [repository]).first
+          # Insert the feedback into the database
+          @db.execute('INSERT INTO fork_feedback (repository, owner, comment, grade) VALUES (?, ?, ?, ?)',
+                      [repository, owner, comment, grade])
+          
+          # Return a success response
+          { status: 'success', message: 'Feedback submitted successfully' }.to_json
+        else 
+          # Insert the feedback into the database
+          @db.execute('UPDATE fork_feedback SET repository=?, owner=?, comment=?, grade=?',
+                      [repository, owner, comment, grade])
+          
+          # Return a success response
+          { status: 'success', message: 'Feedback submitted successfully' }.to_json
+        end
       else
         # If any data is missing, return an error
         status 400
