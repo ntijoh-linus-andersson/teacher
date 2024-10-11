@@ -25,7 +25,7 @@ class Seeder
 			db.execute('CREATE TABLE fork_feedback(
 					id INTEGER PRIMARY KEY AUTOINCREMENT,
 					repository TEXT NOT NULL,
-					fork TEXT NOT NULL,
+					owner TEXT NOT NULL,
 					comment TEXT NOT NULL,
 					grade TEXT NOT NULL
 			)')

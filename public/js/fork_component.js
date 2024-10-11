@@ -14,11 +14,36 @@ export class ForkCard extends MUI {
         this.init();
     }
 
+    connectedCallback() {
+        this.shadowRoot.querySelector("#feedback-form").addEventListener("submit", this.#handleSubmit.bind(this))
+    }
+    disconnectedCallback() {
+        this.shadowRoot.querySelector("#feedback-form").removeEventListener("submit", this.#handleSubmit.bind(this))
+    }
+
+    async #handleSubmit(e) {
+        e.preventDefault()
+        const form = e.target
+        const comment = form.comment.value
+        const grade = form.options.value
+        const owner = this.owner.login
+        const repo = this.repoPath
+
+        fetch('/api/feedback', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ owner: owner, repo: repo, comment: comment, grade: grade })
+        })
+    }
+
     async init() {
         try {
             // Fetch the manifest and the content based on the file path
             this.manifest = await JSON.parse(await this.#getContent(this.owner.login, this.name, ".manifest.json"));
             this.content = await this.#getContent(this.owner.login, this.name, this.manifest["filePath"]);
+            this.feedbackData = await this.#getFeedback(this.repoPath);
             this.#updateTemplate(); // Update the template with fetched data
         } catch (error) {
             console.error('Error fetching content:', error);
@@ -49,6 +74,19 @@ export class ForkCard extends MUI {
         return decodedContent;
     }
 
+    async #getFeedback(repoPath) {
+        if (!repoPath) {
+            return null;
+        }
+    
+        const response = await fetch(`/api/feedback/${repoPath}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+    
+        return await response.json();
+    }
+
     #template() {
         const template = document.createElement("template");
         template.innerHTML = `
@@ -74,8 +112,8 @@ export class ForkCard extends MUI {
                     
                 </div>
                 <div class="mdl-card__actions mdl-card--border">
-                    <form>
-                        <input type="text" placeholder="Comment">
+                    <form id="feedback-form">
+                        <input type="text" placeholder="Comment" name="comment">
                         <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="radio-1">
                             <input type="radio" id="radio-1" class="mdl-radio__button" name="options" value="1">
                             <span class="mdl-radio__label" style="display: flex; align-items: center;"><i class="material-icons">check</i> Klar</span>
@@ -100,8 +138,9 @@ export class ForkCard extends MUI {
     }
 
     #updateTemplate() {
+        this.shadowRoot.querySelector("#feedback-form").removeEventListener("submit", this.#handleSubmit.bind(this))
         this.shadowRoot.innerHTML = "";  // Clear the shadow DOM
-        this.shadowRoot.appendChild(this.#template());  // Re-append the template
+        this.shadowRoot.appendChild(this.#template());  // Re-append the templatea
 
         // Manually upgrade MDL components in shadow DOM
         if (window.componentHandler) {
@@ -149,6 +188,14 @@ export class ForkCard extends MUI {
             resultsElement.innerHTML = results;
         }
 
+        const feedbackForm = this.shadowRoot.querySelector("#feedback-form");
+
+        if (this.feedbackData) {
+            feedbackForm.comment.value = this.feedbackData.comment || "";
+            feedbackForm.options.value = this.feedbackData.grade || 3;
+        }
+
+        feedbackForm.addEventListener("submit", this.#handleSubmit.bind(this))
     }
 }
 

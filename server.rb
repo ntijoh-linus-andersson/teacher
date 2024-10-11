@@ -187,6 +187,19 @@ class Server < Sinatra::Base
     end
   end
 
+  get '/api/feedback/*' do
+    repo = params['splat'].first
+
+    if repo
+      feedbackData = @db.execute('SELECT * from fork_feedback where repository=?', [repo]).first
+      puts(feedbackData)
+      # Return a success response
+      feedbackData.to_json
+    else
+      { status: 'error', message: 'No repo' }.to_json
+    end
+  end
+
   post '/login' do
     # Parse the incoming JSON payload
     payload = JSON.parse(request.body.read)
@@ -248,16 +261,21 @@ end
       payload = JSON.parse(request.body.read)
 
       # Extract the necessary data from the payload
-      repository = payload['repository']
-      fork = payload['fork']
+      repository = payload['repo']
+      owner = payload['owner']
       comment = payload['comment']
       grade = payload['grade']
 
+      puts(repository)
+      puts(owner)
+      puts(comment)
+      puts(grade)
+
       # Ensure all required data is present
-      if repository && fork && comment && grade
+      if repository && owner && comment && grade
         # Insert the feedback into the database
-        @db.execute('INSERT INTO fork_feedback (repository, fork, comment, grade) VALUES (?, ?, ?, ?)',
-                    [repository, fork, comment, grade])
+        @db.execute('INSERT INTO fork_feedback (repository, owner, comment, grade) VALUES (?, ?, ?, ?)',
+                    [repository, owner, comment, grade])
         
         # Return a success response
         { status: 'success', message: 'Feedback submitted successfully' }.to_json
