@@ -22,6 +22,7 @@ export class ForkCard extends MUI {
     }
 
     async #handleSubmit(e) {
+        console.log('submit');
         e.preventDefault()
         const form = e.target
         const comment = form.comment.value
@@ -40,14 +41,21 @@ export class ForkCard extends MUI {
 
     async init() {
         try {
-            // Fetch the manifest and the content based on the file path
             this.manifest = await JSON.parse(await this.#getContent(this.owner.login, this.name, ".manifest.json"));
             this.content = await this.#getContent(this.owner.login, this.name, this.manifest["filePath"]);
-            this.feedbackData = await this.#getFeedback(this.repoPath);
-            this.#updateTemplate(); // Update the template with fetched data
         } catch (error) {
-            console.error('Error fetching content:', error);
+            console.error('Error fetching manifest or content:', error);
+            this.content = null;
         }
+    
+        try {
+            this.feedbackData = await this.#getFeedback(this.repoPath);
+        } catch (error) {
+            console.error('Error fetching feedback:', error);
+            this.feedbackData = null;
+        }
+        
+        this.#updateTemplate();
     }
 
     async #getFile(owner, name, filePath) {
