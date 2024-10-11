@@ -1,22 +1,50 @@
 import { RepoContainer } from "./repo_container.js";
 import { ForkContainer } from "./fork_container_component.js";
 
-
 class ViewController extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({mode: 'open'});
-        this.shadowRoot.appendChild(this.#template());
     }
     
-    connectedCallback(){
+    async connectedCallback(){
+        if (await this.#login()){
+            this.shadowRoot.appendChild(this.#template());
+       }else{
+           this.shadowRoot.appendChild(this.#loginTemplate())
+       }
         this.shadowRoot.addEventListener('searchEvent', this.#handleSearch.bind(this))
+        this.shadowRoot.addEventListener('loginEvent', this.#handleLogin.bind(this))
         this.shadowRoot.addEventListener('thisForkEvent', this.#handleFork.bind(this))
     }
 
     disconnectedCallback(){
         this.shadowRoot.addEventListener('searchEvent', this.#handleSearch.bind(this))
         this.shadowRoot.removeEventListener('thisForkEvent', this.#handleFork.bind(this))
+    }
+
+    async #login(){
+        try {
+            const response = await fetch('/ifLogin');
+            const data = await response.json();
+    
+            return data.status === 'success';
+        } catch (error) {
+            console.error('Error during login check:', error);
+            return false;
+        }
+    }
+
+    #handleLogin(e){
+        this.#resetView()
+    }
+
+    #loginTemplate(){
+        const template = document.createElement('template');
+        template.innerHTML = `
+            <login-page></login-page>
+        `
+        return template.content.cloneNode(true);
     }
 
     async #handleSearch(e) {
