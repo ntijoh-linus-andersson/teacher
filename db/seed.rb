@@ -10,7 +10,7 @@ class Seeder
 
 	def self.db
 			if @db == nil
-					@db = SQLite3::Database.new('./db/db.sqlite')
+					@db = SQLite3::Database.new('./db/teacher.db')
 					@db.results_as_hash = true
 			end
 			return @db
@@ -43,3 +43,5 @@ class Seeder
   end
 
 end
+
+Seeder.seed!

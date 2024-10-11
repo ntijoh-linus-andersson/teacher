@@ -9,7 +9,7 @@ export class LoginEvent extends CustomEvent {
     }
 }
 
-export class Login extends HTMLElement{
+export class LoginPage extends HTMLElement{
     constructor(){
         super();
         this.attachShadow({mode: 'open'});
@@ -17,17 +17,17 @@ export class Login extends HTMLElement{
     }
 
     connectedCallback(){
-        this.shadowRoot.querySelector('#loginBtn').addEventListener('click', this.#handleLogin.bind(this));
+        this.shadowRoot.querySelector('#login-form').addEventListener('submit', this.#handleLogin.bind(this));
     }
 
     disconnectedCallback(){
-        this.shadowRoot.querySelector('#loginBtn').removeEventListener('click', this.#handleLogin.bind(this));
+        this.shadowRoot.querySelector('#login-form').removeEventListener('submit', this.#handleLogin.bind(this));
     }
 
     async #handleLogin(e){
         e.preventDefault();
-        const username = e.target.querySelector('#username').value
-        const password = e.target.querySelector('#password').value
+        const username = e.target.username.value
+        const password = e.target.password.value
         
         const response = await fetch('/login', {
             method: 'POST',
@@ -39,9 +39,16 @@ export class Login extends HTMLElement{
 
         if (!response.ok) {
             throw new Error (`HTTP error! Status: ${response.status}`);
-        } else {
-            this.parentNode.dispatchEvent(new LoginEvent(username));
         }
+
+        const data = await response.json();
+
+        if (data.status == 'success') {
+            this.parentNode.dispatchEvent(new LoginEvent(username));
+        }else{
+            throw new Error (`login error! Status: ${data.status}`);
+        }
+  
     }
 
     #template(){
@@ -129,9 +136,9 @@ export class Login extends HTMLElement{
                 <div class="login-options">
                     <div class="option teacher-option">
                         <h2>Lärare</h2>
-                        <form action="/login" method="POST">
-                            <input id="username" type="text" placeholder="Användarnamn" name="username" required>
-                            <input id="password" type="password" placeholder="Lösenord" name="password" required>
+                        <form id="login-form" action="/login" method="POST">
+                            <input type="text" placeholder="Användarnamn" name="username" required>
+                            <input type="password" placeholder="Lösenord" name="password" required>
                             <button id="loginBtn" type="submit">Logga in</button>
                         </form>
                     </div>
@@ -148,4 +155,4 @@ export class Login extends HTMLElement{
     }
 }
 
-window.customElements.define("Login", Login);
+window.customElements.define("login-page", LoginPage);

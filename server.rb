@@ -23,22 +23,9 @@ class Server < Sinatra::Base
 
   # Home route
   get '/' do
-    access_token = session[:access_token]
-    if access_token == nil
-        redirect '/login'
-    else
-        erb :index
-    end
+    erb :index
   end
 
-  get '/login' do
-    access_token = session[:access_token]
-    if access_token != nil
-        redirect '/'
-    else
-        erb :login
-    end
-  end
 
   # GitHub OAuth - Step 1: Redirect to GitHub for Authorization
   get '/auth/github' do
@@ -77,8 +64,16 @@ class Server < Sinatra::Base
   end
 
   get '/logout' do
-    session.clear  # Clear the session data
-    redirect '/login'  # Redirect to the login page
+    session.clear 
+    redirect '/'  
+  end
+
+  get '/ifLogin' do
+    if session[:is_teacher] == true || session[:access_token] != nil
+      return { status: 'success', message: 'You are logged in' }.to_json
+    else
+      return { status: 'error', message: 'Not logged in' }.to_json
+    end
   end
   
   def getGithubUserName(response_params)
@@ -195,33 +190,37 @@ class Server < Sinatra::Base
   post '/login' do
     # Parse the incoming JSON payload
     payload = JSON.parse(request.body.read)
-
+  
     # Extract the necessary data from the payload
     username = payload['username']
     password = payload['password']
-
+  
     # Ensure all required data is present
     if username && password
-      # Insert the feedback into the database
-      user = @db.execute('SELECT * FROM users WHERE username=?',
-                  [username])[0]
-
-      if user.username == password
-        session[:is_teacher] = true
-        # Return a success response
-        { status: 'success', message: 'Successfull login' }.to_json
+      # Find the user in the database
+      user = @db.execute('SELECT * FROM users WHERE username=?', [username]).first
+  
+      if user
+        # Check if the passwords match (plain text comparison)
+        if user['password'] == password
+          session[:is_teacher] = true
+          session[:teacher_username] = username
+          { status: 'success', message: 'Successful login' }.to_json
+        else
+          { status: 'error', message: 'Incorrect password' }.to_json
+        end
       else
-        # If any no user is matching, return an error
-      { status: 'error', message: 'Failed to login' }.to_json
+        { status: 'error', message: 'User not found' }.to_json
       end
     else
-      # If any data is missing, return an error
-      { status: 'error', message: 'Failed to login' }.to_json
+      { status: 'error', message: 'Username and password are required' }.to_json
     end
   end
+  
 
   # Fetch user info from GitHub using the access token
 get '/api/user' do
+  if session[:is_teacher] != true
     access_token = session[:access_token]
     halt 401, "Unauthorized" unless access_token
   
@@ -237,7 +236,10 @@ get '/api/user' do
     else
       halt 500, "Failed to fetch user information: #{response.parsed_response['message'] || 'Unknown error'}"
     end
+  else
+    { username: session[:teacher_username] }.to_json
   end
+end
   
   # Route to add grade and comment for a specific fork/repository
   post '/api/feedback' do
