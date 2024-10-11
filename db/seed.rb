@@ -5,6 +5,7 @@ class Seeder
 	def self.seed!
 			drop_tables
 			create_tables
+			insert_default_data
 	end
 
 	def self.db
@@ -16,12 +17,12 @@ class Seeder
 	end
 
 	def self.drop_tables
-			db.execute('DROP TABLE IF EXISTS fork-feedback')
+			db.execute('DROP TABLE IF EXISTS fork_feedback')
 			db.execute('DROP TABLE IF EXISTS users')
 	end
 
 	def self.create_tables
-			db.execute('CREATE TABLE fork-feedback(
+			db.execute('CREATE TABLE fork_feedback(
 					id INTEGER PRIMARY KEY AUTOINCREMENT,
 					repository TEXT NOT NULL,
 					fork TEXT NOT NULL,
@@ -31,9 +32,14 @@ class Seeder
 			db.execute('CREATE TABLE users(
 					id INTEGER PRIMARY KEY AUTOINCREMENT,
 					username TEXT NOT NULL,
-					password TEXT NOT NULL,
-					teacher BOOLEAN
+					password TEXT NOT NULL
 			)')
 	end
+
+	def self.insert_default_data
+    db.execute "INSERT INTO users (username, password) VALUES (?, ?)", 
+               ['Daniel', 'grillkorv']
+    puts "Default teacher user inserted."
+  end
 
 end
