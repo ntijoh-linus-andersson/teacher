@@ -67,16 +67,20 @@ export class ForkCard extends MUI {
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
-    
+        
+        console.log(response)
+
         return await response.json();
     }
 
     async #getContent(owner, name, filePath) {
+        console.log(owner, name, filePath)
         if (!owner || !name || !filePath) {
             return null;
         }
     
         const content = await this.#getFile(owner, name, filePath);
+        console.log(content)
         const decodedContent = atob(content.content);  // Decode Base64 content
         
         return decodedContent;

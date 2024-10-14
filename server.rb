@@ -26,7 +26,6 @@ class Server < Sinatra::Base
     erb :index
   end
 
-
   # GitHub OAuth - Step 1: Redirect to GitHub for Authorization
   get '/auth/github' do
     github_client_id = ENV['GITHUB_CLIENT_ID']
@@ -54,9 +53,6 @@ class Server < Sinatra::Base
     if response_params['access_token']
       session[:github_user_info] = getGithubUserName(response_params)
       session[:access_token] = response_params['access_token']
-      puts(response_params)
-      puts(session[:access_token])  # Store access token in session
-      puts(session[:github_user_info])
       redirect '/'
     else
       halt 500, "Failed to retrieve access token: #{response_params['error_description'] || 'Unknown error'}"
@@ -71,6 +67,16 @@ class Server < Sinatra::Base
   get '/ifLogin' do
     if session[:is_teacher] == true || session[:access_token] != nil
       return { status: 'success', message: 'You are logged in' }.to_json
+    else
+      return { status: 'error', message: 'Not logged in' }.to_json
+    end
+  end
+
+  get '/login/type' do
+    if session[:is_teacher] == true
+      return { status: 'success', message: 'teacher' }.to_json
+    elsif session[:access_token] != nil
+      return { status: 'success', message: 'elev' }.to_json
     else
       return { status: 'error', message: 'Not logged in' }.to_json
     end
@@ -122,6 +128,54 @@ class Server < Sinatra::Base
     end
   end
 
+  get '/api/feedback/fork/:elevName' do
+    if session[:access_token] != nil
+      elevName = params['elevName']
+  
+      if elevName
+        repositorys = @db.execute('SELECT repository from fork_feedback where owner=?', [elevName])
+        
+        puts(repositorys)  # Log repositories to check what you're getting
+  
+        # Modify URLs and call getFork
+        forks = repositorys.map do |repository_hash|
+          repositoryURL = repository_hash['repository']
+          
+          # Replace the github.com URL with the corresponding GitHub API URL
+          apiURL = repositoryURL.gsub('https://github.com/', 'https://api.github.com/repos/')
+          
+          # Call getFork with the modified API URL
+          getFork(apiURL)
+        end
+  
+        # Convert the array of forks to JSON before sending the response
+        forks.to_json
+      else
+        { status: 'error', message: 'No elevName' }.to_json
+      end
+    else
+      { status: 'error', message: 'No rights' }.to_json
+    end
+  end
+  
+  def getFork(repoURL)
+    # Perform the API request
+    response = HTTParty.get(
+      repoURL,
+      headers: {
+        "Accept" => "application/vnd.github+json",
+        "Authorization" => "Bearer #{ENV['GITHUB_AUTH_TOKEN']}",  # Use environment variable for the token
+        "X-GitHub-Api-Version" => "2022-11-28"
+      }
+    )
+  
+    if response.success?
+      response.parsed_response  # Return parsed response as Ruby object (hash)
+    else
+      nil
+    end
+  end
+
   # Endpoint to get forks of a specific GitHub repository
   get '/api/forks/:owner/:repo' do
     if session[:is_teacher]
@@ -130,7 +184,7 @@ class Server < Sinatra::Base
 
       # Construct the API request URL
       url = "https://api.github.com/repos/#{owner}/#{repo}/forks"
-      
+
       # Perform the API request
       response = HTTParty.get(
         url,
@@ -156,7 +210,7 @@ class Server < Sinatra::Base
 
     # Endpoint to get forks of a specific GitHub repository
   get '/api/forks/:owner/:repo/*' do
-    if session[:is_teacher]
+    if session[:is_teacher] || session[:access_token] != nil
       owner = params['owner']  # Capture the owner
       repo = params['repo']    # Capture the repo
       filePath = params['splat'].first  # Capture the full file path
@@ -192,7 +246,7 @@ class Server < Sinatra::Base
 
     if repo
       feedbackData = @db.execute('SELECT * from fork_feedback where repository=?', [repo]).first
-      puts(feedbackData)
+
       # Return a success response
       feedbackData.to_json
     else
@@ -265,11 +319,6 @@ end
       owner = payload['owner']
       comment = payload['comment']
       grade = payload['grade']
-
-      puts(repository)
-      puts(owner)
-      puts(comment)
-      puts(grade)
 
       # Ensure all required data is present
       if repository && owner && comment && grade
