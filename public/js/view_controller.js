@@ -10,12 +10,16 @@ class ViewController extends HTMLElement {
     async connectedCallback(){
         if (await this.#login()){
             this.shadowRoot.appendChild(this.#template());
-       }else{
-           this.shadowRoot.appendChild(this.#loginTemplate())
-       }
+        } else{
+            this.shadowRoot.appendChild(this.#loginTemplate())
+        }
         this.shadowRoot.addEventListener('searchEvent', this.#handleSearch.bind(this))
         this.shadowRoot.addEventListener('loginEvent', this.#handleLogin.bind(this))
         this.shadowRoot.addEventListener('thisForkEvent', this.#handleFork.bind(this))
+        
+        if (await this.#loginType() == "elev") {
+            this.#buildElev();
+        }
     }
 
     disconnectedCallback(){
@@ -32,6 +36,17 @@ class ViewController extends HTMLElement {
         } catch (error) {
             console.error('Error during login check:', error);
             return false;
+        }
+    }
+
+    async #loginType() {
+        try {
+            const response = await fetch('/login/type');
+            const data = await response.json();
+            return data.message;
+        } catch (error) {
+            console.error('Error during login type check:', error);
+            return null;
         }
     }
 
@@ -89,8 +104,6 @@ class ViewController extends HTMLElement {
         this.shadowRoot.appendChild(new RepoContainer(data));
     }
     
-
-    
     async #buildForks(ownerName, repoName) {
         this.#resetView();
         const data = await this.#getForks(ownerName, repoName);
@@ -99,6 +112,30 @@ class ViewController extends HTMLElement {
             return;
         }
 
+        this.shadowRoot.appendChild(new ForkContainer(data));
+    }
+
+    async #buildElev() {
+        this.#resetView();
+        const elevName = await this.#getElevName();
+        const data = await this.#getElevFeedbackFork(elevName);
+
+        console.log(data)
+    
+        // If no data is returned, show error message and image
+        if (!data || data.length === 0) {
+            const errorTemplate = document.createElement('template');
+            errorTemplate.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <p>No Forks with feedback found.</p>
+                    <img src="/img/no-matches.jpeg" style="max-width: 300px; height: auto;">
+                </div>
+            `;
+            this.shadowRoot.appendChild(errorTemplate.content.cloneNode(true));
+            return;
+        }
+    
+        // If data exists, append the RepoContainer with the data
         this.shadowRoot.appendChild(new ForkContainer(data));
     }
 
@@ -141,6 +178,32 @@ class ViewController extends HTMLElement {
         }
     }
 
+    async #getElevName() {
+        try {
+            const response = await fetch('/api/user');
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            const data = await response.json();
+            return data.username;
+        } catch (error) {
+            console.error('Error fetching user info:', error);
+            return null;
+        }
+    }
+
+    async #getElevFeedbackFork(elevName) {
+        try {
+            const response = await fetch(`/api/feedback/fork/${elevName}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching repositories:', error);
+            return null;
+        }
+    }
 }
 
 
